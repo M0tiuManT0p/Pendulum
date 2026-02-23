@@ -17,13 +17,12 @@ Pendulum InitPendulum1(void){
     pendulum1.state.Velocity1 = 0.0;
     pendulum1.state.Velocity2 = 0.0;
 
-    pendulum1.stable.x = SCREEN_WIDTH / 2;
-    pendulum1.stable.y = SCREEN_HEIGHT - (SCREEN_HEIGHT / 3) * 2 ;
-
-    pendulum1.points = Cords(pendulum1.data, pendulum1.state, pendulum1.stable);
-
-    for (int i = 0; i < 255; i++) {
-        pendulum1.history[i] = pendulum1.points.p2; 
+    pendulum1.stable.x = 0; 
+    pendulum1.stable.y = 0;
+    
+    for (int i = 0; i < maxHistory; i++) {
+        pendulum1.history[i].x = 0;
+        pendulum1.history[i].y = 0;
     }
 
     pendulum1.count = 0;

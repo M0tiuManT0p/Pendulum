@@ -7,6 +7,8 @@
 #define SCREEN_WIDTH GetScreenWidth()
 #define SCREEN_HEIGHT GetScreenHeight()
 
+#define maxHistory 255
+
 typedef struct {
     double x;
     double y;

@@ -1,7 +1,9 @@
 #ifndef LIB_H
 #define LIB_H
 
-#include "raylib.h"
+#include <stdlib.h>
+#include <string.h>
+#include "external/raylib.h"
 #include "math.h"
 #include "structs.h"
 #include "raygui.h"
@@ -58,6 +60,8 @@ Pendulum InitPretzel(void);
 
 bool DrawSettingsButton(void);
 
-bool SettingsWindow(void);
+bool SettingsWindow(Pendulum *pendulum);
+
+void LengthSettings(Pendulum *pendulum, float startX, float startY, bool *editMode, bool isFirst);
 
 #endif 
