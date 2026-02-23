@@ -40,15 +40,17 @@ void Init(void);
 
 double Radians(double angle);
 
+double Degrees(double angle);
+
 double Square(double number);
 
 Points Cords(StartingData Data, State State, Point stable);
 
-Acceleration AccelerationFunction(StartingData Data, State State);
+Acceleration AccelerationFunction(StartingData Data, State State, double AirResistance);
 
-State UpdateState(StartingData Data, State State, double Time);
+State UpdateState(StartingData Data, State State, double Time, double AirResistance);
 
-void DrawPendulum(Pendulum pendulum, Color color);
+void DrawPendulum(Pendulum pendulum);
 
 Pendulum InitPendulum1(void);
 
@@ -60,8 +62,8 @@ Pendulum InitPretzel(void);
 
 bool DrawSettingsButton(void);
 
-bool SettingsWindow(Pendulum *pendulum);
+bool SettingsWindow(Pendulum *pendulum, bool *Moving, bool *showAftermark);
 
-void LengthSettings(Pendulum *pendulum, float startX, float startY, bool *editMode, bool isFirst);
+void SliderAndLabel(Pendulum *pendulum, Rectangle panel, float *startY, bool *editMode, bool isFirst, int data, float minVal, float maxVal);
 
 #endif 

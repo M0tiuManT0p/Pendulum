@@ -52,6 +52,9 @@ typedef struct {
     Point stable;
     Point history[1000];
     int count;
+    double AirResistance;
+    Color color;
+    double speed;
 } Pendulum;
 
 #endif 

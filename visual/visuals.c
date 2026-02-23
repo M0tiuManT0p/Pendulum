@@ -22,7 +22,7 @@ void Line(Point p1, Point p2, double r, Color color){
     DrawLineEx(start, end, r, color);
 }
 
-void Circle(Point p,int r, Color color){
+void Circle(Point p, int r, Color color){
 
     DrawCircle(p.x, p.y, r, color);
 }
@@ -33,23 +33,26 @@ double Length(Point p1, Point p2){
 
 void Init(void){
     SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_VSYNC_HINT); 
-    
+
     InitWindow(START_WIDTH, START_HEIGHT, "Pendulum");
     SetTargetFPS(60);
 
     GuiLoadStyleDark();
 }
 
-void DrawPendulum(Pendulum pendulum, Color color){
-    Circle(pendulum.stable, 10, color);
-    Circle(pendulum.points.p1, 10, color);
-    Circle(pendulum.points.p2, 10, color);
+void DrawPendulum(Pendulum pendulum){
+    Circle(pendulum.points.p1, pendulum.data.Mass1 / 5, pendulum.color);
+    Circle(pendulum.points.p2, pendulum.data.Mass2 / 5, pendulum.color);
 
-    Line(pendulum.stable, pendulum.points.p1, 3.0, color);
-    Line(pendulum.points.p1, pendulum.points.p2, 3.0, color);
+    Line(pendulum.stable, pendulum.points.p1, pendulum.data.Mass1 / 20, pendulum.color);
+    Line(pendulum.points.p1, pendulum.points.p2, (pendulum.data.Mass1 + pendulum.data.Mass2) / 40, pendulum.color);
 }
 
 void Aftermark(Pendulum pendulum) { 
+    Color DarkColor = pendulum.color;
+    DarkColor.r = (unsigned char)(DarkColor.r * 0.4f);
+    DarkColor.g = (unsigned char)(DarkColor.g * 0.4f);
+    DarkColor.b = (unsigned char)(DarkColor.b * 0.4f);
 
     for (int i = 0; i < maxHistory - 1; i++) {
         Point p1 = { 
@@ -64,7 +67,7 @@ void Aftermark(Pendulum pendulum) {
         int diff = (i - pendulum.count + maxHistory) % maxHistory;
         float intensity = (float)diff / maxHistory;
 
-        Color color = Fade(WHITE, intensity);
+        Color color = Fade(DarkColor, intensity);
 
         if (i + 1 != pendulum.count) {
             Line(p1, p2, 1.5, color);

@@ -6,10 +6,10 @@ Pendulum InitPendulum1(void){
     pendulum1.data.Length1 = 100.00;
     pendulum1.data.Length2 = 150.00;
 
-    pendulum1.data.Mass1 = 2.00;
-    pendulum1.data.Mass2 = 2.00;
+    pendulum1.data.Mass1 = 30.00;
+    pendulum1.data.Mass2 = 30.00;
 
-    pendulum1.data.g = 20;
+    pendulum1.data.g = 100;
 
     pendulum1.state.Angle1 = Radians(35);
     pendulum1.state.Angle2 = Radians(-35);
@@ -19,7 +19,13 @@ Pendulum InitPendulum1(void){
 
     pendulum1.stable.x = 0; 
     pendulum1.stable.y = 0;
-    
+
+    pendulum1.AirResistance = 0;
+
+    pendulum1.color = BLUE;
+
+    pendulum1.speed = 100;
+
     for (int i = 0; i < maxHistory; i++) {
         pendulum1.history[i].x = 0;
         pendulum1.history[i].y = 0;

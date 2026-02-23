@@ -23,7 +23,7 @@ linux: $(SRCS)
 	$(CC_LINUX) $(CFLAGS) $(SRCS) -o $(TARGET_LINUX) $(LIBS_LINUX)
 	
 windows: $(SRCS)
-	$(CC_WIN) $(CFLAGS) $(SRCS) -o $(TARGET_WIN) -Linclude/external $(LIBS_WIN) -static
+	$(CC_WIN) -O3 $(CFLAGS) $(SRCS) -o $(TARGET_WIN) -Linclude/external $(LIBS_WIN) -static
 
 clean:
 	rm -f $(TARGET_LINUX) $(TARGET_WIN)
