@@ -22,7 +22,7 @@ Pendulum InitPendulum1(void){
 
     pendulum1.AirResistance = 0;
 
-    pendulum1.color = BLUE;
+    pendulum1.color = DARKGRAY;
 
     pendulum1.speed = 100;
 
@@ -36,65 +36,53 @@ Pendulum InitPendulum1(void){
     return pendulum1;
 }
 
-// Pendulum InitPendulum2(void){
-//     Pendulum pendulum2;
+void ResetPendulum(Pendulum *p) {
+    p->state.Angle1 = Radians(35);
+    p->state.Angle2 = Radians(-35);
+    
+    p->state.Velocity1 = 0.0;
+    p->state.Velocity2 = 0.0;
+    
+    for (int i = 0; i < maxHistory; i++) {
+        p->history[i].x = 0;
+        p->history[i].y = 0;
+    }
+    p->count = 0;
+    
+    Cords(p);
+}
 
-//     pendulum2.data.Length1 = 150.00;
-//     pendulum2.data.Length2 = 200.00;
+void ApplyPreset(Pendulum *p, int preset) {
+    if (preset == 1) { // Pretzel
+        p->data.Length1 = 120.0; p->data.Length2 = 120.0;
+        p->data.Mass1 = 2.0; p->data.Mass2 = 2.0;
+        p->data.g = 9.81;
+        p->state.Angle1 = 2.49; p->state.Angle2 = 0.25;
+    } else if (preset == 2) { // Small Angle
+        p->data.Length1 = 100.0; p->data.Length2 = 100.0;
+        p->data.Mass1 = 10.0; p->data.Mass2 = 10.0;
+        p->data.g = 9.81;
+        p->state.Angle1 = Radians(5); p->state.Angle2 = 0.0;
+    } else if (preset == 3) { // In-Phase
+        p->data.Length1 = 100.0; p->data.Length2 = 100.0;
+        p->data.Mass1 = 10.0; p->data.Mass2 = 10.0;
+        p->data.g = 9.81;
+        p->state.Angle1 = Radians(10); p->state.Angle2 = Radians(14.14);
+    } else if (preset == 4) { // Anti-Phase
+        p->data.Length1 = 100.0; p->data.Length2 = 100.0;
+        p->data.Mass1 = 10.0; p->data.Mass2 = 10.0;
+        p->data.g = 9.81;
+        p->state.Angle1 = Radians(10); p->state.Angle2 = Radians(-14.14);
+    }
 
-//     pendulum2.data.Mass1 = 2.00;
-//     pendulum2.data.Mass2 = 2.00;
+    p->state.Velocity1 = 0.0;
+    p->state.Velocity2 = 0.0;
+    p->count = 0;
 
-//     pendulum2.data.g = 9.81;
-
-//     pendulum2.state.Angle1 = Radians(45);
-//     pendulum2.state.Angle2 = Radians(-45);
-
-//     pendulum2.state.Velocity1 = 0.0;
-//     pendulum2.state.Velocity2 = 0.0;
-
-//     pendulum2.stable.x = (screenWidth / 3) * 2;
-//     pendulum2.stable.y = screenHeight - (screenHeight / 3) * 2 ;
-
-//     pendulum2.points = Cords(pendulum2.data, pendulum2.state, pendulum2.stable);
-
-//     for (int i = 0; i < 255; i++) {
-//         pendulum2.history[i] = pendulum2.points.p2; 
-//     }
-
-//     pendulum2.count = 0;
-
-//     return pendulum2;
-// }
-
-// Pendulum InitPretzel(void){
-//     Pendulum pretzel;
-
-//     pretzel.data.Length1 = 120.00;
-//     pretzel.data.Length2 = 120.00;
-
-//     pretzel.data.Mass1 = 2.00;
-//     pretzel.data.Mass2 = 2.00;
-
-//     pretzel.data.g = 9.81;
-
-//     pretzel.state.Angle1 = 2.49;
-//     pretzel.state.Angle2 = 0.25;
-
-//     pretzel.state.Velocity1 = 0.0;
-//     pretzel.state.Velocity2 = 0.0;
-
-//     pretzel.stable.x = screenWidth / 2;
-//     pretzel.stable.y = screenHeight - (screenHeight / 3) * 2 ;
-
-//     pretzel.points = Cords(pretzel.data, pretzel.state, pretzel.stable);
-
-//     for (int i = 0; i < 1000; i++) {
-//         pretzel.history[i] = pretzel.points.p2; 
-//     }
-
-//     pretzel.count = 0;
-
-//     return pretzel;
-// }
-
+    for (int i = 0; i < maxHistory; i++) {
+        p->history[i].x = 0;
+        p->history[i].y = 0;
+    }
+    
+    Cords(p);
+}

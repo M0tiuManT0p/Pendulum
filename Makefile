@@ -17,7 +17,7 @@ LIBS_LINUX = -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
 
 LIBS_WIN = -lraylib -lopengl32 -lgdi32 -lwinmm -mwindows
 
-all: linux windows
+all: windows
 
 linux: $(SRCS)
 	$(CC_LINUX) $(CFLAGS) $(SRCS) -o $(TARGET_LINUX) $(LIBS_LINUX)

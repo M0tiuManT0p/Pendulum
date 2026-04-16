@@ -7,7 +7,7 @@
 #define SCREEN_WIDTH GetScreenWidth()
 #define SCREEN_HEIGHT GetScreenHeight()
 
-#define maxHistory 255
+#define maxHistory 1500
 
 typedef struct {
     double x;
@@ -47,14 +47,24 @@ typedef struct {
 
 typedef struct {
     Points points;
+
     StartingData data;
+
     State state;
+
     Point stable;
-    Point history[1000];
+
+    Point history[maxHistory];
+
     int count;
+
     double AirResistance;
+
     Color color;
+
     double speed;
+    
+    Acceleration acc;
 } Pendulum;
 
 #endif 

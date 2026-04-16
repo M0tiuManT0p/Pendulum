@@ -10,29 +10,82 @@ Rectangle PointsToRect(Points p) {
     return rect;
 }
 
-bool DrawSettingsButton(void) {
+bool DrawButton(int number) {
     int sw = GetScreenWidth();
 
-    float btnSize = 40.0f;
-    float margin = 20.0f;
-
-    int iconScale = (sw > 1200) ? 2 : 1; 
+    float iconScale = (float)sw / 600.0f;
+    if (iconScale < 1.0f) iconScale = 1.0f; 
     GuiSetIconScale(iconScale);
 
+    float actualBtnSize = 16.0f * iconScale; 
+    float margin = 20.0f;
+
     Rectangle btnRect = { 
-        (float)sw - btnSize - margin,
+        (float)sw - actualBtnSize - margin,
         margin,
-        btnSize,
-        btnSize
+        actualBtnSize,
+        actualBtnSize
     };
 
-    bool pressed = GuiLabelButton(btnRect, GuiIconText(142, ""));
+    bool pressed = GuiLabelButton(btnRect, GuiIconText(number, ""));
 
     GuiSetIconScale(1);
     
     return pressed;
 }
-bool SettingsWindow(Pendulum *pendulum, bool *isPaused, bool *showAftermark) {
+
+bool DrawResetButton(void) {
+    int sw = GetScreenWidth();
+
+    float iconScale = (float)sw / 600.0f;
+    if (iconScale < 1.0f) iconScale = 1.0f; 
+    GuiSetIconScale(iconScale);
+
+    float actualBtnSize = 16.0f * iconScale; 
+    float margin = 20.0f;
+    float spacing = 10.0f; 
+
+    Rectangle btnRect = { 
+        (float)sw - (actualBtnSize * 2) - margin - spacing,
+        margin,
+        actualBtnSize,
+        actualBtnSize
+    };
+
+    bool pressed = GuiLabelButton(btnRect, GuiIconText(75, ""));
+
+    GuiSetIconScale(1);
+    
+    return pressed;
+}
+
+void KeyCheck(Pendulum *p, bool *isPaused, bool *showAftermark, bool *showSettings) {
+    if (IsKeyPressed(KEY_F11)) {
+        ToggleFullscreen();
+    }
+
+    if (IsKeyPressed(KEY_ESCAPE)) {
+        CloseWindow();
+    }
+
+    if (IsKeyPressed(KEY_P)) {
+        *isPaused = !(*isPaused);
+    }
+
+    if (IsKeyPressed(KEY_A)) {
+        *showAftermark = !(*showAftermark);
+    }
+
+    if (IsKeyPressed(KEY_S)) {
+        *showSettings = !(*showSettings);
+    }
+    
+    if (IsKeyPressed(KEY_R)) {
+        ResetPendulum(p);
+    }
+}
+
+bool SettingsWindow(Pendulum *pendulum, bool *isPaused, bool *showAftermark, bool *isDarkTheme) {
     float windowWidth = GetScreenWidth() / 3.0f;
     Rectangle windowRect = { GetScreenWidth() - windowWidth, 0, windowWidth, (float)GetScreenHeight() };
 
@@ -49,36 +102,48 @@ bool SettingsWindow(Pendulum *pendulum, bool *isPaused, bool *showAftermark) {
 
     float margin = windowRect.width * 0.05f;
 
-    GuiSetStyle(DEFAULT, BACKGROUND_COLOR, ColorToInt(GetColor(0x2c2c2ccc)));
+    Color panelColor = *isDarkTheme ? GetColor(0x2c2c2ccc) : GetColor(0xc8c8c8cc);
+    DrawRectangleRec(windowRect, panelColor);
 
-    bool pressed = GuiWindowBox(windowRect, "#198# SETTINGS");
+    bool pressed = DrawButton(113);
 
     if (GuiCheckBox((Rectangle){ windowRect.x + margin, currentY, 20, 20 }, "Pause Simulation", isPaused)) {
     }
     
     if (GuiCheckBox((Rectangle){ windowRect.x + (windowRect.width / 2), currentY, 20, 20 }, "Trace", showAftermark)) {
     }
-
+    
     currentY += 40;
+
+    float btnWidth = (windowRect.width - (margin * 3)) / 2.0f;
+    if (GuiButton((Rectangle){ windowRect.x + margin, currentY, btnWidth, 20 }, "Pretzel")) {
+        ApplyPreset(pendulum, 1);
+    }
+    if (GuiButton((Rectangle){ windowRect.x + margin * 2 + btnWidth, currentY, btnWidth, 20 }, "Small Angle")) {
+        ApplyPreset(pendulum, 2);
+    }
+    currentY += 25;
+    if (GuiButton((Rectangle){ windowRect.x + margin, currentY, btnWidth, 20 }, "In-Phase")) {
+        ApplyPreset(pendulum, 3);
+    }
+    if (GuiButton((Rectangle){ windowRect.x + margin * 2 + btnWidth, currentY, btnWidth, 20 }, "Anti-Phase")) {
+        ApplyPreset(pendulum, 4);
+    }
+    currentY += 35;
 
     SliderAndLabel(pendulum, windowRect, &currentY, &editL1, true, 0, 10.0f, 300.0f);
     SliderAndLabel(pendulum, windowRect, &currentY, &editL2, false, 0, 10.0f, 300.0f);
-
     SliderAndLabel(pendulum, windowRect, &currentY, &editM1, true, 1, 1.0f, 300.0f);
     SliderAndLabel(pendulum, windowRect, &currentY, &editM2, false, 1, 1.0f, 300.0f);
-
-    SliderAndLabel(pendulum, windowRect, &currentY, &editG, false, 2, 0.0f, 20.0f);
+    SliderAndLabel(pendulum, windowRect, &currentY, &editG, false, 2, 0.0f, 100.0f);
     SliderAndLabel(pendulum, windowRect, &currentY, &editAir, false, 3, 0.0f, 1.0f);
     SliderAndLabel(pendulum, windowRect, &currentY, &editSpeed, false, 6, 1.0f, 1000.0f);
-
     SliderAndLabel(pendulum, windowRect, &currentY, &editA1, true, 4, -180.0f, 180.0f);
     SliderAndLabel(pendulum, windowRect, &currentY, &editA2, false, 4, -180.0f, 180.0f);
-
     SliderAndLabel(pendulum, windowRect, &currentY, &editV1, true, 5, -100.0f, 100.0f);
     SliderAndLabel(pendulum, windowRect, &currentY, &editV2, false, 5, -100.0f, 100.0f);
 
     GuiSetStyle(DEFAULT, BACKGROUND_COLOR, oldColor);
-    
 
     return pressed;
 }
@@ -117,27 +182,58 @@ void SliderAndLabel(Pendulum *pendulum, Rectangle panel, float *startY, bool *ed
     GuiSlider((Rectangle){ sliderX, *startY, sliderWidth, 20 }, NULL, NULL, &fData, minVal, maxVal);
 
     float boxX = sliderX + sliderWidth + padding;
-    if (GuiValueBox((Rectangle){ boxX, *startY, valueBoxWidth, 20 }, NULL, &iData, (int)minVal, (int)maxVal, *editMode)) {
+
+    int textMin = *editMode ? -99999 : (int)minVal;
+    int textMax = *editMode ? 99999 : (int)maxVal;
+
+    if (GuiValueBox((Rectangle){ boxX, *startY, valueBoxWidth, 20 }, NULL, &iData, textMin, textMax, *editMode)) {
         *editMode = !(*editMode);
     }
 
     if (fData != displayVal) {
         *targetData = (data == 4) ? Radians((double)fData) : (double)fData;
         
-        pendulum->points = Cords(pendulum->data, pendulum->state, pendulum->stable);
+        Cords(pendulum);
         for (int i = 0; i < maxHistory; i++) {
             pendulum->history[i].x = pendulum->points.p2.x - pendulum->stable.x;
             pendulum->history[i].y = pendulum->points.p2.y - pendulum->stable.y;
         }
     } else if (iData != (int)displayVal) {
-        *targetData = (data == 4) ? Radians((double)iData) : (double)iData;
-        
-        pendulum->points = Cords(pendulum->data, pendulum->state, pendulum->stable);
-        for (int i = 0; i < maxHistory; i++) {
-            pendulum->history[i].x = pendulum->points.p2.x - pendulum->stable.x;
-            pendulum->history[i].y = pendulum->points.p2.y - pendulum->stable.y;
+
+        if (iData >= (int)minVal && iData <= (int)maxVal) {
+            *targetData = (data == 4) ? Radians((double)iData) : (double)iData;
+            
+            Cords(pendulum);
+            for (int i = 0; i < maxHistory; i++) {
+                pendulum->history[i].x = pendulum->points.p2.x - pendulum->stable.x;
+                pendulum->history[i].y = pendulum->points.p2.y - pendulum->stable.y;
+            }
         }
     }
 
     *startY += panel.height * 0.06f; 
+}
+
+bool DrawThemeButton(void) {
+    int sw = GetScreenWidth();
+
+    float iconScale = (float)sw / 600.0f;
+    if (iconScale < 1.0f) iconScale = 1.0f; 
+    GuiSetIconScale(iconScale);
+
+    float actualBtnSize = 16.0f * iconScale; 
+    float margin = 20.0f;
+
+    Rectangle btnRect = { 
+        margin,
+        margin,
+        actualBtnSize,
+        actualBtnSize
+    };
+
+    bool pressed = GuiLabelButton(btnRect, GuiIconText(223, ""));
+
+    GuiSetIconScale(1);
+    
+    return pressed;
 }

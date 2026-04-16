@@ -23,7 +23,6 @@ void Line(Point p1, Point p2, double r, Color color){
 }
 
 void Circle(Point p, int r, Color color){
-
     DrawCircle(p.x, p.y, r, color);
 }
 
@@ -31,13 +30,10 @@ double Length(Point p1, Point p2){
     return sqrt(((p2.x - p1.x) * (p2.x - p1.x)) + ((p2.y - p1.y) * (p2.y - p1.y)));
 }
 
-void Init(void){
+void InitScreen(void){
     SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_VSYNC_HINT); 
-
     InitWindow(START_WIDTH, START_HEIGHT, "Pendulum");
     SetTargetFPS(60);
-
-    GuiLoadStyleDark();
 }
 
 void DrawPendulum(Pendulum pendulum){
@@ -73,4 +69,55 @@ void Aftermark(Pendulum pendulum) {
             Line(p1, p2, 1.5, color);
         }
     }
+}
+
+void InitStable(Pendulum *p){
+    p->stable.x = GetScreenWidth() / 2;
+    p->stable.y = GetScreenHeight() / 3; 
+}
+
+void Draw(Pendulum *p){
+    BeginDrawing();
+
+    if (DrawThemeButton() == true){
+        isDarkTheme = !isDarkTheme;
+        
+        if (isDarkTheme) {
+            p->color = LIGHTGRAY;
+        } else {
+            p->color = DARKGRAY;
+        }
+    }
+
+    if (isDarkTheme == true){
+        ClearBackground(GetColor(0x181818ff));
+        GuiLoadStyleDark();
+    }
+    else {
+        ClearBackground(GetColor(0xeeeeeeff));
+        GuiLoadStyleDefault();
+    }
+
+    if (showAftermark == true) {
+        Aftermark(*p);
+    }
+
+    DrawPendulum(*p);
+
+    if (showSettings == false) {
+        if (DrawButton(142) == true) {
+            showSettings = !showSettings; 
+        }
+    }
+    else {
+        if (SettingsWindow(p, &isPaused, &showAftermark, &isDarkTheme) == true) {
+            showSettings = false;
+        }
+    }
+
+    if (DrawResetButton() == true) {
+        ResetPendulum(p);
+    }
+
+    EndDrawing();
 }
