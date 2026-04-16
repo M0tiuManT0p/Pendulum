@@ -2,42 +2,40 @@
 
 //https://www.myphysicslab.com/pendulum/double-pendulum-en.html
 
-
-double Radians(double Angle){
+double Radians(double Angle) {
     return Angle * PI / 180;
 }
 
-double Square(double number){
+double Degrees(double Angle) {
+    return Angle * 180.0 / PI;
+}
+
+double Square(double number) {
     return number * number;
 }
 
-Points Cords(StartingData Data, State State, Point stable){
-    Points points;
+void Cords(Pendulum *p) {
+    p->points.p1.x = p->stable.x + p->data.Length1 * sin(p->state.Angle1);
+    p->points.p1.y = p->stable.y + p->data.Length1 * cos(p->state.Angle1);
 
-    points.p1.x = stable.x + Data.Length1 * sin(State.Angle1);
-    points.p1.y = stable.y + Data.Length1 * cos(State.Angle1);
-
-    points.p2.x = points.p1.x + Data.Length2 * sin(State.Angle2);
-    points.p2.y = points.p1.y + Data.Length2 * cos(State.Angle2);
-
-    return points;
+    p->points.p2.x = p->points.p1.x + p->data.Length2 * sin(p->state.Angle2);
+    p->points.p2.y = p->points.p1.y + p->data.Length2 * cos(p->state.Angle2);
 }
-Acceleration AccelerationFunction(StartingData Data, State State){
-    Acceleration Acc;
 
-    double m1 = Data.Mass1;
-    double m2 = Data.Mass2;
+void AccelerationFunction(Pendulum *p) {
+    double m1 = p->data.Mass1;
+    double m2 = p->data.Mass2;
 
-    double l1 = Data.Length1;
-    double l2 = Data.Length2;
+    double l1 = p->data.Length1;
+    double l2 = p->data.Length2;
 
-    double g = Data.g;
+    double g = p->data.g;
 
-    double a1 = State.Angle1;
-    double a2 = State.Angle2;
+    double a1 = p->state.Angle1;
+    double a2 = p->state.Angle2;
 
-    double v1 = State.Velocity1;
-    double v2 = State.Velocity2;
+    double v1 = p->state.Velocity1;
+    double v2 = p->state.Velocity2;
 
     double num1 = -g * (2 * m1 + m2) * sin(a1) 
                   - m2 * g * sin(a1 - 2 * a2) 
@@ -45,7 +43,8 @@ Acceleration AccelerationFunction(StartingData Data, State State){
 
     double denum1 = l1 * (2 * m1 + m2 - m2 * cos(2 * a1 - 2 * a2));
 
-    Acc.Acceleration1 = num1 / denum1;
+    double a1pure = num1 / denum1;
+    p->acc.Acceleration1 = a1pure - (p->AirResistance * p->state.Velocity1 / p->data.Mass1);
 
     double num2 = 2 * sin(a1 - a2) * (Square(v1) * l1 * (m1 + m2) 
               + g * (m1 + m2) * cos(a1) 
@@ -53,72 +52,84 @@ Acceleration AccelerationFunction(StartingData Data, State State){
 
     double denum2 = l2 * (2 * m1 + m2 - m2 * cos(2 * a1 - 2 * a2));
 
-    Acc.Acceleration2 = num2 / denum2;
-
-    return Acc;
+    double a2pure = num2 / denum2;
+    p->acc.Acceleration2 = a2pure - (p->AirResistance * p->state.Velocity2 / p->data.Mass2);
 }
 
-State UpdateState(StartingData Data, State state, double Time){
-    State current = state;
+double RungeKuttaSwitch(Pendulum p, int data) {
+    switch (data) {
+        case 1: return p.state.Angle1;
+        case 2: return p.state.Angle2;
+        case 3: return p.state.Velocity1;
+        case 4: return p.state.Velocity2;
+        default: return 0.0;
+    }
+}
 
-    Acceleration Acc1 = AccelerationFunction(Data, current);
+double RungeKuttaDerivative(Pendulum p, int data) {
+    switch (data) {
+        case 1: return p.state.Velocity1;
+        case 2: return p.state.Velocity2;
+        case 3: return p.acc.Acceleration1;
+        case 4: return p.acc.Acceleration2;
+        default: return 0.0;
+    }
+}
 
-    double k1_v1 = Acc1.Acceleration1;
-    double k1_v2 = Acc1.Acceleration2;
-    
-    double k1_a1 = current.Velocity1;
-    double k1_a2 = current.Velocity2;
+void SetTempState(Pendulum *p, int data, double value) {
+    switch (data) {
+        case 1: p->state.Angle1 = value; break;
+        case 2: p->state.Angle2 = value; break;
+        case 3: p->state.Velocity1 = value; break;
+        case 4: p->state.Velocity2 = value; break;
+    }
+}
 
-    State s1;
-    s1.Velocity1 = current.Velocity1 + k1_v1 * (Time / 2.0);
-    s1.Velocity2 = current.Velocity2 + k1_v2 * (Time / 2.0);
+double RungeKutta(Pendulum p, double Time, int data) {
+    double current = RungeKuttaSwitch(p, data);
 
-    s1.Angle1 = current.Angle1 + k1_a1 * (Time / 2.0);
-    s1.Angle2 = current.Angle2 + k1_a2 * (Time / 2.0);
+    AccelerationFunction(&p);
+    double k1 = RungeKuttaDerivative(p, data);
 
-    Acceleration Acc2 = AccelerationFunction(Data, s1);
+    Pendulum p2 = p;
+    SetTempState(&p2, data, current + k1 * (Time / 2.0));
+    AccelerationFunction(&p2);
+    double k2 = RungeKuttaDerivative(p2, data);
 
-    double k2_v1 = Acc2.Acceleration1;
-    double k2_v2 = Acc2.Acceleration2;
-    
-    double k2_a1 = s1.Velocity1;
-    double k2_a2 = s1.Velocity2;
+    Pendulum p3 = p;
+    SetTempState(&p3, data, current + k2 * (Time / 2.0));
+    AccelerationFunction(&p3);
+    double k3 = RungeKuttaDerivative(p3, data);
 
-    State s2;
-    s2.Velocity1 = current.Velocity1 + k2_v1 * (Time / 2.0);
-    s2.Velocity2 = current.Velocity2 + k2_v2 * (Time / 2.0);
+    Pendulum p4 = p;
+    SetTempState(&p4, data, current + k3 * Time);
+    AccelerationFunction(&p4);
+    double k4 = RungeKuttaDerivative(p4, data);
 
-    s2.Angle1 = current.Angle1 + k2_a1 * (Time / 2.0);
-    s2.Angle2 = current.Angle2 + k2_a2 * (Time / 2.0);
+    return current + (Time / 6.0) * (k1 + 2.0*k2 + 2.0*k3 + k4);
+}
 
-    Acceleration Acc3 = AccelerationFunction(Data, s2);
+double AngleWrap(double angle) {
+    while (angle > PI) angle -= 2.0 * PI;
+    while (angle < -PI) angle += 2.0 * PI;
+    return angle;
+}
 
-    double k3_v1 = Acc3.Acceleration1;
-    double k3_v2 = Acc3.Acceleration2;
-    
-    double k3_a1 = s2.Velocity1;
-    double k3_a2 = s2.Velocity2;
+void UpdateState(Pendulum *p, double Time, bool showAftermark) {
+    for (int i = 0; i < p->speed; i++) {
+        p->state.Angle1 = AngleWrap(RungeKutta(*p, Time, 1));
+        p->state.Angle2 = AngleWrap(RungeKutta(*p, Time, 2));
 
-    State s3;
-    s3.Velocity1 = current.Velocity1 + k3_v1 * Time;
-    s3.Velocity2 = current.Velocity2 + k3_v2 * Time;
+        p->state.Velocity1 = RungeKutta(*p, Time, 3);
+        p->state.Velocity2 = RungeKutta(*p, Time, 4);
+    }
 
-    s3.Angle1 = current.Angle1 + k3_a1 * Time;
-    s3.Angle2 = current.Angle2 + k3_a2 * Time;
+    Cords(p);
 
-    Acceleration Acc4 = AccelerationFunction(Data, s3);
-
-    double k4_v1 = Acc4.Acceleration1;
-    double k4_v2 = Acc4.Acceleration2;
-    
-    double k4_a1 = s3.Velocity1;
-    double k4_a2 = s3.Velocity2;
-
-    current.Velocity1 = current.Velocity1 + (Time / 6.0) * (k1_v1 + 2.0*k2_v1 + 2.0*k3_v1 + k4_v1);
-    current.Velocity2 = current.Velocity2 + (Time / 6.0) * (k1_v2 + 2.0*k2_v2 + 2.0*k3_v2 + k4_v2);
-
-    current.Angle1 = current.Angle1 + (Time / 6.0) * (k1_a1 + 2.0*k2_a1 + 2.0*k3_a1 + k4_a1);
-    current.Angle2 = current.Angle2 + (Time / 6.0) * (k1_a2 + 2.0*k2_a2 + 2.0*k3_a2 + k4_a2);
-
-    return current;
+    if (showAftermark == true) {
+        p->history[p->count].x = p->points.p2.x - p->stable.x;
+        p->history[p->count].y = p->points.p2.y - p->stable.y;
+        p->count++;
+        p->count = p->count %maxHistory;
+    }
 }

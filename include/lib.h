@@ -1,10 +1,21 @@
 #ifndef LIB_H
 #define LIB_H
 
-#include "raylib.h"
+#include <stdlib.h>
+#include <string.h>
+#include "external/raylib.h"
 #include "math.h"
 #include "structs.h"
 #include "raygui.h"
+
+
+
+    extern double dt;
+
+    extern bool showSettings;
+    extern bool isPaused;
+    extern bool showAftermark;
+    extern bool isDarkTheme;
 
 /**
  * Draws a line between 2 points.
@@ -32,21 +43,31 @@ void Circle(Point p, int r, Color color);
 double Length(Point p1, Point p2);
 
 /**
- * Initializes the monitor.
+ * Initializes the window.
  */
-void Init(void);
+void InitScreen(void);
 
 double Radians(double angle);
 
+void KeyCheck(Pendulum *p, bool *isPaused, bool *showAftermark, bool *showSettings);
+
+double Degrees(double angle);
+
 double Square(double number);
 
-Points Cords(StartingData Data, State State, Point stable);
+void Cords(Pendulum *p);
 
-Acceleration AccelerationFunction(StartingData Data, State State);
+void AccelerationFunction(Pendulum *p);
 
-State UpdateState(StartingData Data, State State, double Time);
+double RungeKuttaSwitch(Pendulum p, int data);
 
-void DrawPendulum(Pendulum pendulum, Color color);
+double RungeKutta (Pendulum p, double Time, int data);
+
+double AngleWrap(double angle);
+
+void UpdateState(Pendulum *p, double Time, bool showAftermark);
+
+void DrawPendulum(Pendulum pendulum);
 
 Pendulum InitPendulum1(void);
 
@@ -56,8 +77,22 @@ void Aftermark(Pendulum pendulum);
 
 Pendulum InitPretzel(void);
 
-bool DrawSettingsButton(void);
+bool DrawButton(int number);
 
-bool SettingsWindow(void);
+bool SettingsWindow(Pendulum *pendulum, bool *isPaused, bool *showAftermark, bool *isDarkTheme);
+
+void SliderAndLabel(Pendulum *pendulum, Rectangle panel, float *startY, bool *editMode, bool isFirst, int data, float minVal, float maxVal);
+
+void InitStable(Pendulum *p);
+
+bool DrawThemeButton(void);
+
+void Draw(Pendulum *p);
+
+void ResetPendulum(Pendulum *p);
+
+bool DrawResetButton(void);
+
+void ApplyPreset(Pendulum *p, int preset);
 
 #endif 

@@ -1,4 +1,9 @@
 #include "lib.h"
+#include <stdlib.h>
+#include <string.h>
+
+#define RAYGUI_CUSTOM_ICONS
+#include "external/style_dark.h"
 
 // --- RAYLIB BUILT-IN COLORS ---
 // LIGHTGRAY, GRAY, DARKGRAY
@@ -17,8 +22,7 @@ void Line(Point p1, Point p2, double r, Color color){
     DrawLineEx(start, end, r, color);
 }
 
-void Circle(Point p,int r, Color color){
-
+void Circle(Point p, int r, Color color){
     DrawCircle(p.x, p.y, r, color);
 }
 
@@ -26,38 +30,94 @@ double Length(Point p1, Point p2){
     return sqrt(((p2.x - p1.x) * (p2.x - p1.x)) + ((p2.y - p1.y) * (p2.y - p1.y)));
 }
 
-void Init(void){
-    SetConfigFlags(FLAG_WINDOW_RESIZABLE);
-
-    InitWindow(START_WIDTH, START_HEIGHT, "RK4 Algorithm Visualization");
+void InitScreen(void){
+    SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_VSYNC_HINT); 
+    InitWindow(START_WIDTH, START_HEIGHT, "Pendulum");
     SetTargetFPS(60);
-
-    GuiLoadStyleDark();
 }
 
-void DrawPendulum(Pendulum pendulum, Color color){
-    Circle(pendulum.stable, 10, color);
-    Circle(pendulum.points.p1, 10, color);
-    Circle(pendulum.points.p2, 10, color);
+void DrawPendulum(Pendulum pendulum){
+    Circle(pendulum.points.p1, pendulum.data.Mass1 / 5, pendulum.color);
+    Circle(pendulum.points.p2, pendulum.data.Mass2 / 5, pendulum.color);
 
-    Line(pendulum.stable, pendulum.points.p1, 3.0, color);
-    Line(pendulum.points.p1, pendulum.points.p2, 3.0, color);
+    Line(pendulum.stable, pendulum.points.p1, pendulum.data.Mass1 / 20, pendulum.color);
+    Line(pendulum.points.p1, pendulum.points.p2, (pendulum.data.Mass1 + pendulum.data.Mass2) / 40, pendulum.color);
 }
 
-void Aftermark(Pendulum pendulum) {
-    for (int i = 0; i < 1000; i++) {
-        
-        int diff = (i - pendulum.count + 1000) % 1000;
-        
-        int alpha = (int)((diff / 1000.0) * 255.0);
-        
-        Color color = (Color){ 255, 255, 255, alpha };
-        
-        Point p1 = pendulum.history[i];
-        Point p2 = pendulum.history[(i + 1) % 1000];
-        
-        if (p1.x != 0 && p2.x != 0) {
-            Line(p1, p2, 1.0, color);
+void Aftermark(Pendulum pendulum) { 
+    Color DarkColor = pendulum.color;
+    DarkColor.r = (unsigned char)(DarkColor.r * 0.4f);
+    DarkColor.g = (unsigned char)(DarkColor.g * 0.4f);
+    DarkColor.b = (unsigned char)(DarkColor.b * 0.4f);
+
+    for (int i = 0; i < maxHistory - 1; i++) {
+        Point p1 = { 
+            pendulum.history[i].x + pendulum.stable.x, 
+            pendulum.history[i].y + pendulum.stable.y 
+        };
+        Point p2 = { 
+            pendulum.history[i + 1].x + pendulum.stable.x, 
+            pendulum.history[i + 1].y + pendulum.stable.y 
+        };
+
+        int diff = (i - pendulum.count + maxHistory) % maxHistory;
+        float intensity = (float)diff / maxHistory;
+
+        Color color = Fade(DarkColor, intensity);
+
+        if (i + 1 != pendulum.count) {
+            Line(p1, p2, 1.5, color);
         }
     }
+}
+
+void InitStable(Pendulum *p){
+    p->stable.x = GetScreenWidth() / 2;
+    p->stable.y = GetScreenHeight() / 3; 
+}
+
+void Draw(Pendulum *p){
+    BeginDrawing();
+
+    if (DrawThemeButton() == true){
+        isDarkTheme = !isDarkTheme;
+        
+        if (isDarkTheme) {
+            p->color = LIGHTGRAY;
+        } else {
+            p->color = DARKGRAY;
+        }
+    }
+
+    if (isDarkTheme == true){
+        ClearBackground(GetColor(0x181818ff));
+        GuiLoadStyleDark();
+    }
+    else {
+        ClearBackground(GetColor(0xeeeeeeff));
+        GuiLoadStyleDefault();
+    }
+
+    if (showAftermark == true) {
+        Aftermark(*p);
+    }
+
+    DrawPendulum(*p);
+
+    if (showSettings == false) {
+        if (DrawButton(142) == true) {
+            showSettings = !showSettings; 
+        }
+    }
+    else {
+        if (SettingsWindow(p, &isPaused, &showAftermark, &isDarkTheme) == true) {
+            showSettings = false;
+        }
+    }
+
+    if (DrawResetButton() == true) {
+        ResetPendulum(p);
+    }
+
+    EndDrawing();
 }
